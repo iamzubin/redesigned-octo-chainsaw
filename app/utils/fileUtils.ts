@@ -74,7 +74,7 @@ export const detectProjectType = async (
     const scripts = packageJson?.scripts || {};
 
     // Check for preferred commands in priority order
-    const preferredCommands = ['dev', 'start', 'preview'];
+    const preferredCommands = ['dev', 'start', 'preview', 'compile'];
     const availableCommand = preferredCommands.find((cmd) => scripts[cmd]);
 
     if (availableCommand) {
@@ -87,9 +87,9 @@ export const detectProjectType = async (
 
     return {
       type: 'Node.js',
-      setupCommand: 'npm install',
+      setupCommand: 'npm install && npm run compile',
       followupMessage:
-        'Would you like me to inspect package.json to determine the available scripts for running this project?',
+        'Would you like me to inspect package.json to determine the available scripts for running this project??',
     };
   }
 

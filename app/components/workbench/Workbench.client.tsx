@@ -15,7 +15,8 @@ import {
 } from '~/components/editor/codemirror/CodeMirrorEditor';
 import { IconButton } from '~/components/ui/IconButton';
 import { PanelHeaderButton } from '~/components/ui/PanelHeaderButton';
-import { Slider, type SliderOptions } from '~/components/ui/Slider';
+import { Slider } from '~/components/ui/Slider';
+import type { SliderOption } from '~/components/ui/Slider';
 import { workbenchStore, type WorkbenchViewType } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
@@ -26,6 +27,7 @@ import useViewport from '~/lib/hooks';
 import { PushToGitHubDialog } from '~/components/@settings/tabs/connections/components/PushToGitHubDialog';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { usePreviewStore } from '~/lib/stores/previews';
+import { DeploymentsView } from './DeploymentsView';
 
 interface WorkspaceProps {
   chatStarted?: boolean;
@@ -39,20 +41,12 @@ interface WorkspaceProps {
 
 const viewTransition = { ease: cubicEasingFn };
 
-const sliderOptions: SliderOptions<WorkbenchViewType> = {
-  left: {
-    value: 'code',
-    text: 'Code',
-  },
-  middle: {
-    value: 'diff',
-    text: 'Diff',
-  },
-  right: {
-    value: 'preview',
-    text: 'Preview',
-  },
-};
+const sliderOptions: SliderOption<WorkbenchViewType>[] = [
+  { value: 'code' as WorkbenchViewType, text: 'Code' },
+  { value: 'diff' as WorkbenchViewType, text: 'Diff' },
+  { value: 'preview' as WorkbenchViewType, text: 'Preview' },
+  { value: 'deployments' as WorkbenchViewType, text: 'Deployments' },
+];
 
 const workbenchVariants = {
   closed: {
@@ -489,6 +483,9 @@ export const Workbench = memo(
                   </View>
                   <View initial={{ x: '100%' }} animate={{ x: selectedView === 'preview' ? '0%' : '100%' }}>
                     <Preview />
+                  </View>
+                  <View initial={{ x: '100%' }} animate={{ x: selectedView === 'deployments' ? '0%' : '100%' }}>
+                    <DeploymentsView />
                   </View>
                 </div>
               </div>

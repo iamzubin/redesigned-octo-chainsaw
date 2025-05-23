@@ -16,7 +16,8 @@ interface FileContent {
 export async function detectProjectCommands(files: FileContent[]): Promise<ProjectCommands> {
   const hasFile = (name: string) => files.some((f) => f.path.endsWith(name));
 
-  if (hasFile('package.json')) {
+  // Check for Hardhat project first
+  if (hasFile('hardhat.config.js') && hasFile('package.json')) {
     const packageJsonFile = files.find((f) => f.path.endsWith('package.json'));
 
     if (!packageJsonFile) {
@@ -28,7 +29,44 @@ export async function detectProjectCommands(files: FileContent[]): Promise<Proje
       const scripts = packageJson?.scripts || {};
 
       // Check for preferred commands in priority order
-      const preferredCommands = ['dev', 'start', 'preview'];
+      const preferredCommands = ['dev', 'start', 'preview', 'compile'];
+      const availableCommand = preferredCommands.find((cmd) => scripts[cmd]);
+
+      if (availableCommand) {
+        return {
+          type: 'Hardhat',
+          setupCommand: `npm install && npx hardhat compile`,
+          startCommand: `npm run ${availableCommand}`,
+          followupMessage: `Found Hardhat project with "${availableCommand}" script in package.json. Running "npm run ${availableCommand}" after installation and compilation.`,
+        };
+      }
+
+      return {
+        type: 'Hardhat',
+        setupCommand: 'npm install && npx hardhat compile',
+        followupMessage:
+          'Compiled the project. What changes would you like to make?',
+      };
+    } catch (error) {
+      console.error('Error parsing package.json:', error);
+      return { type: '', setupCommand: '', followupMessage: '' };
+    }
+  }
+
+  // Regular Node.js project check
+  else if (hasFile('package.json')) {
+    const packageJsonFile = files.find((f) => f.path.endsWith('package.json'));
+
+    if (!packageJsonFile) {
+      return { type: '', setupCommand: '', followupMessage: '' };
+    }
+
+    try {
+      const packageJson = JSON.parse(packageJsonFile.content);
+      const scripts = packageJson?.scripts || {};
+
+      // Check for preferred commands in priority order
+      const preferredCommands = ['dev', 'start', 'preview', 'compile'];
       const availableCommand = preferredCommands.find((cmd) => scripts[cmd]);
 
       if (availableCommand) {
@@ -44,7 +82,7 @@ export async function detectProjectCommands(files: FileContent[]): Promise<Proje
         type: 'Node.js',
         setupCommand: 'npm install',
         followupMessage:
-          'Would you like me to inspect package.json to determine the available scripts for running this project?',
+          'Would you like me to inspect package.json to determine the available scripts for running this project???',
       };
     } catch (error) {
       console.error('Error parsing package.json:', error);
@@ -52,7 +90,7 @@ export async function detectProjectCommands(files: FileContent[]): Promise<Proje
     }
   }
 
-  if (hasFile('index.html')) {
+  else if (hasFile('index.html')) {
     return {
       type: 'Static',
       startCommand: 'npx --yes serve',
